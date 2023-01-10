@@ -8,7 +8,7 @@ export function InputField(props: InputFieldProps) {
     const [fieldValue, setFieldValue] = useState("");
 
     return(
-        <>
+        <form>
             <label htmlFor="search" className="mb-2 text-sm font-medium text-gray-900 sr-only dark:text-white">Search</label>
             <div className="relative">
                 <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -33,7 +33,10 @@ export function InputField(props: InputFieldProps) {
                     required />
                 <button 
                     type="submit" 
-                    onClick={() => props.onSubmit(fieldValue)}
+                    onClick={(event) => {
+                        event.preventDefault()
+                        props.onSubmit(fieldValue)
+                    }}
                     className="
                         text-white 
                         absolute 
@@ -51,7 +54,7 @@ export function InputField(props: InputFieldProps) {
                         dark:hover:bg-blue-700 
                         dark:focus:ring-blue-800">Search</button>
             </div>
-        </>
+        </form>
 
     )
 }
