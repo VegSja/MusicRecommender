@@ -2,8 +2,12 @@ import pandas as pd
 from apyori import apriori
 
 
+def get_data_as_df():
+    return pd.read_csv("../../data/artist_user_mapping.csv")
+
+
 def get_transactions():
-    data = pd.read_csv("../../data/lastfm.csv")
+    data = get_data_as_df()
     ## Drop duplicates
     data = data.drop_duplicates()
 
@@ -11,6 +15,7 @@ def get_transactions():
     data = data[['user', 'artist']]
 
     transactions = []
+    print("Converting to transactions")
     for i in data['user'].unique():
         transactions.append(list(data[data['user'] == i]['artist'].values))
 
@@ -28,7 +33,10 @@ def inspect(output):
 def create_assoctiation_rules():
     transactions = get_transactions()
 
-    rules = apriori(transactions = transactions, min_support = 0.01, min_confidence = 0.2, min_lift = 2, min_length = 2)
+    print("Calculating Apriori estimates")
+    rules = apriori(transactions = transactions, min_support = 0.005, min_confidence = 0.1, min_lift = 2)
+    
+    print("Creating list of estimates")
     results = list(rules)
 
     rule_dataframe = pd.DataFrame(inspect(results), columns = ['Left_Hand_Side', 'Right_Hand_Side', 'Support', 'Confidence', 'Lift'])
@@ -37,8 +45,10 @@ def create_assoctiation_rules():
 
 def main():
     rules = create_assoctiation_rules()
+    print("Sorting rules")
     rules = rules.sort_values(by="Lift", ascending=False)
 
+    print("Saving rules to csv")
     rules.to_csv("../../data/rules.csv", encoding='utf-8', index=False)
 
 main()
