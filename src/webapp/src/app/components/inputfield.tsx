@@ -1,4 +1,5 @@
-import { useState } from "react";
+import axios from "axios";
+import { useEffect, useState } from "react";
 
 interface InputFieldProps {
     onSubmit: (query: string) => void;
@@ -6,6 +7,23 @@ interface InputFieldProps {
 
 export function InputField(props: InputFieldProps) {
     const [fieldValue, setFieldValue] = useState("");
+    const [searchSuggestions, setSearchSuggestions] = useState<string[]>([])
+
+    useEffect(() => {
+        if (fieldValue === "") return
+        axios.post("http://127.0.0.1:8000/search", {
+            query: fieldValue
+        }).then(res => {
+            if (res.data.length > 0 && fieldValue === res.data[0]) return
+            setSearchSuggestions(res.data)
+        })
+    }, [fieldValue])
+
+    const onSuggestClick = (suggestion: string) => {
+        setSearchSuggestions([])
+        setFieldValue(suggestion)
+        props.onSubmit(suggestion)
+    }
 
     return(
         <form>
@@ -30,6 +48,7 @@ export function InputField(props: InputFieldProps) {
                         dark:placeholder-gray-400 dark:text-white
                         dark:focus:ring-blue-500 dark:focus:border-blue-500" 
                     placeholder="Search" 
+                    value={fieldValue}
                     required />
                 <button 
                     type="submit" 
@@ -54,6 +73,39 @@ export function InputField(props: InputFieldProps) {
                         dark:hover:bg-blue-700 
                         dark:focus:ring-blue-800">Search</button>
             </div>
+            {searchSuggestions.length > 0 && (
+                <div
+                    className="
+                        block 
+                        w-full 
+                        text-sm text-gray-900 border 
+                        border-gray-300 rounded-lg 
+                        bg-gray-50 
+                        focus:outline-none focus:ring-blue-500 focus:border-blue-500 
+                        dark:bg-gray-700 dark:border-gray-600 
+                        dark:placeholder-gray-400 dark:text-white"
+                    >
+                    {searchSuggestions.map((suggestion) => {
+                            return (
+                                <div
+                                    onClick={() => onSuggestClick(suggestion)}
+                                    className="
+                                        block
+                                        w-full
+                                        hover:bg-gray-600
+                                        dark:bg-gray-700
+                                        cursor-pointer
+                                        p-3
+                                    "
+                                >
+                                    <p >{suggestion}</p>
+                                </div>
+                            )
+                        })
+                    }
+                </div>
+
+            )}
         </form>
 
     )

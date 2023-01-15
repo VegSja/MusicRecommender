@@ -29,6 +29,9 @@ class Listen(BaseModel):
     userID: str
     artist: str
 
+class Search(BaseModel):
+    query: str
+
 
 @app.get("/")
 async def root():
@@ -38,4 +41,10 @@ async def root():
 async def post_recommendation(listen: Listen):
     mask = db.leftside.str.contains(listen.artist, case=False)
     list = db[mask]["rightside"].tolist()[:5]
+    return list
+
+@app.post("/search")
+async def post_search(query: Search):
+    mask = db.leftside.str.contains(query.query, case=False)
+    list = set(db[mask]["leftside"].tolist()[:3])
     return list
