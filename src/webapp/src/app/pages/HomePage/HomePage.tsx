@@ -10,7 +10,7 @@ export function HomePage() {
   const onSearchSubmit = (query: String) => {
     axios.post("http://127.0.0.1:8000/recommend", {
       userID: "testUserId",
-      artist: query.toLowerCase()
+      artist: query
     }).then(res => {
       console.log(res)
       setRecommentations(res.data)

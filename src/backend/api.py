@@ -2,9 +2,17 @@ import pandas as pd
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+import sqlite3
 
 app = FastAPI()
-db = pd.read_csv("../../data/rules.csv")
+
+conn = sqlite3.connect("../database/sqlite.db")
+c = conn.cursor()
+
+c.execute('''
+            SELECT leftside, rightside, support FROM Rules;
+            ''')
+db = pd.DataFrame(c.fetchall(), columns=["leftside", "rightside", "support"]).sort_values(by="support", ascending=False)
 
 origins = [
     "http://localhost:3000"
@@ -28,4 +36,6 @@ async def root():
 
 @app.post("/recommend")
 async def post_recommendation(listen: Listen):
-    return db.loc[db["Left_Hand_Side"] == listen.artist]["Right_Hand_Side"].tolist()
+    mask = db.leftside.str.contains(listen.artist, case=False)
+    list = db[mask]["rightside"].tolist()[:5]
+    return list

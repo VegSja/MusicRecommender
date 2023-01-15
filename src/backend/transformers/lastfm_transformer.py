@@ -1,27 +1,28 @@
+import os
 import pandas as pd
 
-## With small
-print("Reading small file")
-data = pd.read_csv("../../../data/lastfm.csv")
+DATA_SOURCE_PATH  = "../../../data/data_sources/"
 
-data = data[["user", "artist"]]
-## Drop duplicates
-data = data.drop_duplicates()
+dir = os.scandir(DATA_SOURCE_PATH)
 
-data.to_csv("../../../data/artist_user_mapping.csv",encoding="utf-8", index=False)
+large_df = pd.DataFrame()
 
-## With large
-print("Reading large file")
-data = pd.read_csv("../../../data/lastfm_big.csv", delimiter="\t")
+for entry in dir:
+    if entry.is_dir():
+        break
+    if entry.is_file():
+        print(f"Reading: {entry.name}")
+        data = pd.read_csv(entry)
+        data["userplaylist"] = data["user_id"] + data["playlistname"]
+        data = data[['userplaylist', 'artistname']]
+        data["playlist_size"] = data.groupby("userplaylist")["userplaylist"].transform('count')
+        data = data.loc[data["playlist_size"] < 25]
+        data = data.loc[data["playlist_size"] > 5]
+        data = data[['userplaylist', 'artistname']]
+        large_df = pd.concat([large_df, data], ignore_index=True)
 
-print("Filtering large file")
-data = data.loc[data["plays"] > 5000]
+large_df = large_df.drop_duplicates()
 
-print(f"Size after filtering: {data.size}")
 
-data = data[["user", "artist"]]
-## Drop duplicates
-data = data.drop_duplicates()
-
-print("Saving to artist_user_mapping")
-data.to_csv("../../../data/artist_user_mapping.csv",encoding="utf-8", mode="a", header=False, index=False)
+print("Saving to artist_user_mapping. Size: ", large_df.size)
+data.to_csv("../../../data/artist_user_mapping.csv",encoding="utf-8", mode="w", index=False)
