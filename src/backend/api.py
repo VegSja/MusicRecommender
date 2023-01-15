@@ -14,6 +14,12 @@ c.execute('''
             ''')
 db = pd.DataFrame(c.fetchall(), columns=["leftside", "rightside", "support"]).sort_values(by="support", ascending=False)
 
+c.execute('''
+            SELECT * FROM Playlist;
+            ''')
+playlist_db = pd.DataFrame(c.fetchall(), columns=["index", "content"])
+
+
 origins = [
     "http://localhost:3000"
 ]
@@ -48,3 +54,13 @@ async def post_search(query: Search):
     mask = db.leftside.str.contains(query.query, case=False)
     list = set(db[mask]["leftside"].tolist()[:3])
     return list
+
+@app.get("/stats")
+async def get_stats():
+    artists = len(pd.unique(db['leftside']))
+    playlists = len(pd.unique(playlist_db["index"]))
+
+    return {
+        "nb_of_artist": artists,
+        "nb_of_playlists": playlists
+    }
